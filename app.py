@@ -1,3 +1,5 @@
+from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.plotting import figure, show
 from streamlit_bokeh_events import streamlit_bokeh_events
 from bokeh.models import ColumnDataSource, CustomJS
 from bokeh.plotting import figure
@@ -7,13 +9,13 @@ import streamlit as st
 import plotly.express as px
 import numpy as np
 
-st.title('Data Tweaking Labs🧊')
+st.title('🧊Data Tweaking Labs_')
 st.text('Synthic Data Generation')
 st.file_uploader('Upload Data')
 
 st.radio('Pick one', ['Bias Detection and Mitigation',
                       'New Data', 'More Data'])
-st.multiselect('Alogrithms', ['milk', 'apples', 'potatoes'])
+st.multiselect('Alogrithms', ['1', '2', '3'])
 
 # Here
 
@@ -111,27 +113,25 @@ with right_column:
 # import function
 
 # create plot
-p = figure(tools="lasso_select")
-cds = ColumnDataSource(
-    data={
-        "x": [1, 2, 3, 4],
-        "y": [4, 5, 6, 7],
-    }
-)
-p.circle("x", "y", source=cds)
 
-# define events
-cds.selected.js_on_change(
-    "indices",
-    CustomJS(
-        args=dict(source=cds),
-        code="""
-        document.dispatchEvent(
-            new CustomEvent("YOUR_EVENT_NAME", {detail: {your_data: "goes-here"}})
-        )
-        """
-    )
-)
+
+x = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+y = [1, 2, 1, 1, 1, 1, 3, 4, 5, 5, 5]
+c = [50, 40, 30, 20, 10, 60, 50, 40, 30, 20, 10]
+source = ColumnDataSource({'x': x, 'y': y, 'c': c})
+
+p = figure(x_axis_type="datetime", title="Range", plot_height=350,
+           plot_width=800, tooltips=[('time', '@x'), ('place', '@y'), ('value', '@c')])
+p.xgrid.grid_line_color = None
+p.ygrid.grid_line_alpha = 0.5
+p.xaxis.axis_label = 'Time'
+p.yaxis.axis_label = 'Value'
+
+lines = p.line('x', 'y', source=source)
+circles = p.circle('x', 'y', source=source)
+
+p.select_one(HoverTool).renderers = [circles]
+
 
 # result will be a dict of {event_name: event.detail}
 # events by default is "", in case of more than one events pass it as a comma separated values
