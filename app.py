@@ -16,7 +16,7 @@ import plotly.express as px
 from datetime import datetime
 from datetime import timedelta
 
-import PyQt5
+#import PyQt5
 
 st.title('🧊Data Tweaking Labs_')
 st.text('Synthic Data Generation')
