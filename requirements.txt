@@ -4,3 +4,6 @@ streamlit
 plotly.express 
 numpy 
 streamlit-bokeh-events
+faker
+scipy
+datetime
