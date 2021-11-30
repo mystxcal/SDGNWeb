@@ -1,3 +1,5 @@
+from PIL import Image
+from streamlit_drawable_canvas import st_canvas
 from streamlit_bokeh_events import streamlit_bokeh_events
 from bokeh.models import ColumnDataSource, CustomJS
 from bokeh.plotting import figure
@@ -9,28 +11,27 @@ import numpy as np
 
 st.title('Data Tweaking Labs🧊')
 st.text('Synthic Data Generation')
-dataset=st.file_uploader('Upload Data')
-
+dataset = st.file_uploader('Upload Data')
 
 
 if dataset is not None:
-    datatbl=pd.read_csv(dataset)
-    st.write("Uploaded dataset:")   
+    datatbl = pd.read_csv(dataset)
+    st.write("Uploaded dataset:")
     st.dataframe(datatbl.head())
-    
-page=st.selectbox('Pick one', ['Bias Detection and Mitigation',
-                      'New Data', 'More Data'])
 
-if page=='Bias Detection and Mitigation':
+page = st.selectbox('Pick one', ['Bias Detection and Mitigation',
+                                 'New Data', 'More Data'])
+
+if page == 'Bias Detection and Mitigation':
     st.write("detecting bias")
-elif page=='New Data':
-    
-    ncols=st.text_area(label="Enter no. of cols",value="0")
-    
+elif page == 'New Data':
+
+    ncols = st.text_area(label="Enter no. of cols", value="0")
+
     st.write("Describe the columns:")
-    
+
     for i in range(int(ncols)):
-        st.text_area(label="col"+f"{i}",key="col"+f"{i}",height=10)
+        st.text_area(label="col"+f"{i}", key="col"+f"{i}", height=10)
     st.multiselect('Alogrithms', ['milk', 'apples', 'potatoes'])
 
     # Here
@@ -52,7 +53,6 @@ elif page=='New Data':
 
     st.text_input("hi", key="hi")
 
-
     st.line_chart({"data": [1, 5, 2, 6, 2, 1]})
 
     with st.expander("See explanation"):
@@ -62,7 +62,6 @@ elif page=='New Data':
             be random.
         """)
         st.image("https://emoji.gg/assets/emoji/1721_cozysip.png")
-
 
     # Add a selectbox to the sidebar:
     add_selectbox = st.sidebar.selectbox(
@@ -86,7 +85,6 @@ elif page=='New Data':
             'Sorting hat',
             ("Gryffindor", "Ravenclaw", "Hufflepuff", "Slytherin"))
         st.write(f"You are in {chosen} house!")
-
 
     # import function
 
@@ -129,7 +127,21 @@ elif page=='New Data':
 
     # use the result
     st.write(result)
-elif page=='More Data':
+elif page == 'More Data':
     st.write("more data")
 else:
     pass
+
+
+xmin, xmax, ymin, ymax = 2, 4, 5, 15
+fig, ax = plt.subplots()
+ax.set_xlim([xmin, xmax])
+ax.set_ylim([ymin, ymax])
+line, = ax.plot([], [])
+plt.savefig('img.png')
+i = Image.open('img.png')
+# st.image(i)
+# st.pyplot(fig)
+canvas_result = st_canvas(
+    stroke_width=1, background_image=i, update_streamlit=True)
+print(canvas_result)
