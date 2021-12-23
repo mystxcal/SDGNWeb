@@ -10,3 +10,4 @@ datetime
 streamlit_drawable_canvas
 aif360[All]
 streamlit_ace
+gretel_client
