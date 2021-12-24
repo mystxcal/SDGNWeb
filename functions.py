@@ -78,10 +78,14 @@ def colip(coltype, nrows, i, j, tblcols):
         return 0
 
     if coltype == "Python Expression":
+        op=[None]*nrows
         content = st_ace(language="python", theme="twilight", auto_update=True,
                          wrap=True, min_lines=1, max_lines=2, key="code"+str(i)+str(j))
         if content != "":
-            return eval(content)
+            
+            for i in op:
+                i=eval(content)
+            return op
 
 def nameresolver():
     return 0
