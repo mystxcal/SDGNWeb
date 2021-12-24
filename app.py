@@ -111,14 +111,14 @@ if page == 'Bias Detection and Mitigation':
     if dataset is not None:
 
         st.write(datatbl)
-        datatbl = datatbl.dropna(how='any', axis=0)
-        datatbl.info()
+        # datatbl = datatbl.dropna(how='any', axis=0)
+        # datatbl.info()
 
-        datatbl = datatbl.dropna(how='any', axis=0)
-        datatbl.info()
+        # datatbl = datatbl.dropna(how='any', axis=0)
+        # datatbl.info()
 
-        # Drop unnecessary column
-        datatbl = datatbl.drop(['Loan_ID'], axis=1)
+        # # Drop unnecessary column
+        # datatbl = datatbl.drop(['Loan_ID'], axis=1)
     else:
         st.error("no dataset yet")
     st.write("_________")
@@ -126,7 +126,7 @@ if page == 'Bias Detection and Mitigation':
     st.markdown("<h4>Bias Detection:</h4>",
                 unsafe_allow_html=True)
     st.write("Choose the columns you want to detect bias in:")
-    colstodetectbias=st.multiselect("", ["foo", "bar", "baz"])
+    colstodetectbias=st.multiselect("", datatbl.columns)
     st.button("Detect Bias")
     st.write("_________")
 # NEW DATA
@@ -179,7 +179,7 @@ elif page == 'New Data':
                     'Blank', 'String', 'Distribution', 'Names', 'Countries', 'Python Expression'), key="colst"+f"{i}")
             stpcol1,stpcol2=st.columns(2)
             with stpcol1:
-                if st.button("Add step"):
+                if st.button("Add step",key=f"{i}"):
                     generationsteps[i]+=1
 
             if generationsteps[i]>1:    
@@ -255,7 +255,8 @@ elif page == 'More Data':
                 Define transformations to your data with software,
                 and invite team members to subscribe to data feeds in real-time""")
 
-        nrecords = int(st.number_input(label="Number or Records", value=1000))
+        nrecords = int(st.number_input(label="Number of records to generate", value=1000))
+
 
         yaml = ruamel_yaml.YAML()
         yaml.preserve_quotes = True
@@ -268,14 +269,15 @@ elif page == 'More Data':
             fp = yaml.dump(data, fp)
 
         if st.button("Generate"):
+            st.write("Synthetic Data is being Generated")
             subprocess.call('python gretal.py')
             # creationflags=subprocess.CREATE_NEW_CONSOLE)
             st.write("Synthetic Data is being Generated")
         if st.button("Show Generated Data"):
-            if os.path.exists("D:\Development\Codies\Programming\Python\StreamLit\synthetic_data.csv") == True:
+            if os.path.exists("synthetic_data.csv") == True:
                 st.write("Dataset Generated")
                 syntheddata = pd.read_csv(
-                    "D:\Development\Codies\Programming\Python\StreamLit\synthetic_data.csv")
+                    "synthetic_data.csv")
                 st.dataframe(syntheddata)
             else:
                 st.write("Dataset not yet Generated")
