@@ -121,4 +121,4 @@ def page_home():
     st.write('3. Immunity to some common statistical problems: These can include item nonresponse, skip patterns, and other logical constraints.')
     st.write('4. Immunity to some common statistical problems: These can include item nonresponse, skip patterns, and other logical constraints.')
     st.subheader('Bias Mitigation & Detection:')
-    st.write("1. For Bias detection our applications utilizes already established metrics and mitigation algorithms by IBM-AIF360. Further In our work we implement those on new datasets. Also we use this tool to interpret if AI models generate bias data. If yes we provide a mitigated data")
+    st.write("For Bias detection our applications utilizes already established metrics and mitigation algorithms by IBM-AIF360. Further In our work we implement those on new datasets. Also we use this tool to interpret if AI models generate bias data. If yes we provide a mitigated data")
