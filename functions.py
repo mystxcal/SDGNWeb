@@ -112,6 +112,8 @@ def page_home():
             '''
 
     st.markdown(htmlp1, unsafe_allow_html=True)
+    st.subheader("About our App:")
+    st.write("The app is divided into three sections, New Data, More Data, and Bias Detection and Mitigation. On the sidebar on the left you can upload a dataset to generate more columns with synthetic data tools or to detect and eliminate bias with Bias tools. The new data ")
     st.write("Our Web-based Synthetic data & Bias tools help you to generate more data or create entirely new data and detect and eliminate bias in datasets.")
     st.subheader("Synthetic Data & it's benefits:")
     st.write('1. Overcoming real data usage restrictions: Real data may have usage constraints due to privacy rules or other regulations. Synthetic data can replicate all important statistical properties of real data without exposing real data, thereby eliminating the issue.')
@@ -119,7 +121,4 @@ def page_home():
     st.write('3. Immunity to some common statistical problems: These can include item nonresponse, skip patterns, and other logical constraints.')
     st.write('4. Immunity to some common statistical problems: These can include item nonresponse, skip patterns, and other logical constraints.')
     st.subheader('Bias Mitigation & Detection:')
-    st.write("For Bias detection our applications utilizes already established metrics and mitigation algorithms by IBM-AIF360. Further In our work we implement those on new datasets. Also we use this tool to interpret if AI models generate bias data. If yes we provide a mitigated data")
-    st.subheader("About our App:")
-    st.write("Our app is divided into three sections, New Data, More Data, and Bias Detection and Mitigation. On the sidebar on the left you can upload a dataset to generate more columns with synthetic data tools or to detect and eliminate bias with Bias tools. The new data ")
-
+    st.write("1. For Bias detection our applications utilizes already established metrics and mitigation algorithms by IBM-AIF360. Further In our work we implement those on new datasets. Also we use this tool to interpret if AI models generate bias data. If yes we provide a mitigated data")
