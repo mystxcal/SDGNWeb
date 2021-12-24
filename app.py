@@ -50,10 +50,12 @@ from functions import *
 # dataset = st.file_uploader('Upload Data')
 testoutput = []
 
-
+st.sidebar.subheader("Navigation")
 page = st.sidebar.radio('What do you want to do?', ('Home', 'Bias Detection and Mitigation',
-                                                    'New Data', 'More Data', 'Test'))
-dataset = st.sidebar.file_uploader('Upload Data')
+                                                    'New Data', 'More Data'))
+
+st.sidebar.subheader("Upload Dataset")
+dataset = st.sidebar.file_uploader('Upload your dataset here')
 
 if dataset is not None:
     datatbl = pd.read_csv(dataset)
@@ -90,41 +92,22 @@ htmlp2 = '''
         </nav>
     '''
 st.markdown(htmlp2, unsafe_allow_html=True)
-if page == 'Home':
-    # htmlp1 = '''
-    #         <style>
-    #             .text {
-    #                 color: #000000;
-    #                 -webkit-text-stroke: 0.2px white;
-    #                 text-shadow: 1px 0px 1px #CCCCCC, 0px 1px 1px #EEEEEE, 2px 1px 1px #CCCCCC, 1px 2px 1px #EEEEEE, 3px 2px 1px #CCCCCC, 2px 3px 1px #EEEEEE, 4px 3px 1px #CCCCCC, 3px 4px 1px #EEEEEE, 5px 4px 1px #CCCCCC, 4px 5px 1px #EEEEEE, 6px 5px 1px #CCCCCC, 5px 6px 1px #EEEEEE, 7px 6px 1px #CCCCCC;
-
-    #             }
-    #                 del {
-    #                 background: #000;
-    #                 color: #fff;
-    #                 text-decoration:none;
-    #                 }
-    #             .bruh{
-    #                 display:inline;
-    #                 margin-right:10px;
-    #             }
-
-    #         </style>
-    #         <h1 class="text">Data Tweaking Labs🧊</h1>
-    #         <h3 class="text bruh"><i>Synthetic Data Generation</i></h3>
-    #         <del>v0.0.1</del>
-    #         '''
-
-    # st.markdown(htmlp1, unsafe_allow_html=True)
-
-
-    page_home()
 
 # Navigation of the App
-if page == 'Bias Detection and Mitigation':
-    st.subheader("Coming Soon ⚙")
-    # BIAS DETECTION
+if page == 'Home':
+    page_home()
 
+
+if page == 'Bias Detection and Mitigation':
+    # st.subheader("Coming Soon ⚙")
+    # BIAS DETECTION
+    st.title("♻Bias Detection & Mitigation")
+    st.markdown("""
+    <h5 style="font-style: italic;">This tool gives insights into the bias that the dataset has and provides methods to mitigate it.</h5>""", unsafe_allow_html=True)
+    
+    st.write("_________")
+    st.markdown("<h4>Upload the dataset on the left sidebar and it will show up here</h4>",
+                unsafe_allow_html=True)
     if dataset is not None:
 
         st.write(datatbl)
@@ -136,19 +119,28 @@ if page == 'Bias Detection and Mitigation':
 
         # Drop unnecessary column
         datatbl = datatbl.drop(['Loan_ID'], axis=1)
-
-
+    else:
+        st.error("no dataset yet")
+    st.write("_________")
+    
+    st.markdown("<h4>Bias Detection:</h4>",
+                unsafe_allow_html=True)
+    st.write("Choose the columns you want to detect bias in:")
+    colstodetectbias=st.multiselect("", ["foo", "bar", "baz"])
+    st.button("Detect Bias")
+    st.write("_________")
 # NEW DATA
 elif page == 'New Data':
 
+  
+    st.title("💹New Data")
     st.markdown("""
-    <h2>New Data:</h2>
-    <h5 style="font-style: italic;">Generate new data based on the distribution furnished by the user. The product further gives us insights into the bias that the dataset has and ways to mitigate it.</h5>""", unsafe_allow_html=True)
-
+    <h5 style="font-style: italic;">Generate new data based on your specifications.</h5>""", unsafe_allow_html=True)
+    st.write("___________")
     st.subheader("Create your dataset:")
 
-    ncols = int(st.text_input(label="Enter no. of cols", value=1))
-    nrows = int(st.text_input(label="Enter no. of rows", value=10))
+    ncols = int(st.text_input(label="Enter the number of columns in your Dataset", value=1))
+    nrows = int(st.text_input(label="Enter number of rows in your Dataset", value=10))
     colnames = [None]*ncols
     coltypes = [None]*ncols
     colsubtypes = [None]*ncols
@@ -159,13 +151,13 @@ elif page == 'New Data':
     generationsteps = [1]*ncols
  
     # class tablecol:
-    #     def __init__(self, name=None, type=None, subtype=None,cases=[], elements=[None]*nrows, eflags=[None]*nrows):
-    #         self.name=name
-    #         self.type=type
-    #         self.subtype=subtype
-    #         self.cases=cases
-    #         self.elements=elements
-    #         self.eflags=eflags
+        #     def __init__(self, name=None, type=None, subtype=None,cases=[], elements=[None]*nrows, eflags=[None]*nrows):
+        #         self.name=name
+        #         self.type=type
+        #         self.subtype=subtype
+        #         self.cases=cases
+        #         self.elements=elements
+        #         self.eflags=eflags
 
     st.write("_________")
     st.markdown("<h4>Describe the columns:</h4>",
@@ -230,12 +222,23 @@ elif page == 'New Data':
 elif page == 'More Data':
 
     st.title("🗃️More Data")
-    st.subheader("Generate Synthetic Data using one of the following methods:")
+    st.markdown("""
+    <h5 style="font-style: italic;">Generate Synthetic Data using one of the following methods:</h5>""", unsafe_allow_html=True)
+
+    st.write("___________")
+    
+    st.markdown("<h4>First, upload a dataset from the sidebar to the left</h4>",
+                unsafe_allow_html=True)
+    if dataset is not None:
+        st.write(datatbl)
+    else:
+        st.error("no dataset yet")
+    st.write("_________")
 
     modelchoice = st.selectbox('Start by selecting a model',
                                ('Click to choose', 'Gretel', 'CTGAN', 'TGAN'))
 
-# Gretal--------------------------------------------------------------------------------------------------------------
+    # Gretal--------------------------------------------------------------------------------------------------------------
 
     if modelchoice == 'Gretel':
 
@@ -294,7 +297,7 @@ elif page == 'More Data':
                 pass
 
 
-# CTGAN --------------------------------------------------------------------------------------------------------------
+    # CTGAN --------------------------------------------------------------------------------------------------------------
     if modelchoice == 'CTGAN':
         with st.container():
 
@@ -356,7 +359,7 @@ elif page == 'Test':
     st.write(plot_and_move(df))
 
 
-# Hide Hamborgor and "Made with StreamLit"
+    # Hide Hamborgor and "Made with StreamLit"
 hide_streamlit_style = """
             <style>
             # MainMenu {visibility: hidden;}

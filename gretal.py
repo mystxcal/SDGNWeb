@@ -16,7 +16,7 @@ configure_session(ClientConfig(api_key="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 project = create_project(display_name="synthetic-data")
 
 
-with open("D:\Development\Codies\Programming\Python\StreamLit\input.yaml", 'r') as stream:
+with open("input.yaml", 'r') as stream:
     config = yaml.safe_load(stream)
 
 # Set the model epochs to 50
