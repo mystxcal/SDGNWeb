@@ -1,67 +1,88 @@
+# IMPORTS   -----------------------------------
 from bokeh.models import DataTable, TableColumn, PointDrawTool, ColumnDataSource, CustomJS
 from bokeh.plotting import figure, output_file, show, Column
-from PIL import Image
-from streamlit_drawable_canvas import st_canvas
-from streamlit_bokeh_events import streamlit_bokeh_events
-from bokeh.models import ColumnDataSource, CustomJS
-from bokeh.plotting import figure
 import subprocess
 import sys
+import ctgan
 import matplotlib.pyplot as plt
 import pandas as pd
-import streamlit as st
 import plotly.express as px
 import numpy as np
 import random
 import os
 from faker import Faker
+import ruamel.yaml
+import json
+from smart_open import open
+import yaml
+from PIL import Image
+#Streamlit
+import streamlit as st
+from streamlit_drawable_canvas import st_canvas
+from streamlit_bokeh_events import streamlit_bokeh_events
 from streamlit_ace import st_ace
+#Sklearn
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV, train_test_split
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn import metrics
-
+#AIF360
 from aif360.sklearn.inprocessing import GridSearchReduction
 from aif360.sklearn.datasets import fetch_adult
-from aif360.sklearn.metrics import disparate_impact_ratio, average_odds_error, generalized_fpr
-from aif360.sklearn.metrics import generalized_fnr, difference
+from aif360.sklearn.metrics import disparate_impact_ratio, average_odds_error, generalized_fpr,generalized_fnr, difference
 from aif360.algorithms.preprocessing import DisparateImpactRemover
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-import ruamel_yaml
-
 # Gretel
 from getpass import getpass
 from gretel_client import configure_session, ClientConfig
 from gretel_client.helpers import poll
-
-import json
-from smart_open import open
-import yaml
-
+#CTGAN
+from ctgan import CTGANSynthesizer,load_demo
+#External functions
 from functions import *
-
-# ------------------------------------------------------------------------------------------------
-
+# from bias import *
 
 
-# dataset = st.file_uploader('Upload Data')
+#Bias Detections
+np.random.seed(0)
+
+from aif360.datasets import GermanDataset
+from aif360.metrics import BinaryLabelDatasetMetric
+from aif360.algorithms.preprocessing import Reweighing
+
+from IPython.display import Markdown, display
+
+
+#CTGAN
+from ctgan import CTGANSynthesizer
+from ctgan import load_demo
+from table_evaluator import load_data, TableEvaluator
+
+
+#------------------------------------------------------------------------------------------------
+#Global variables
 testoutput = []
+datatbl=None
+visi1,visi2,visi3=False,False,False
+#----------------------------------------------------------------------------------------------
+#Functions
+def dummyfunc():
+    pass
 
+#------------------------------------------------------------------------------------------------
+#Sidebar
 st.sidebar.subheader("Navigation")
 page = st.sidebar.radio('What do you want to do?', ('Home', 'Bias Detection and Mitigation',
                                                     'New Data', 'More Data'))
-
 st.sidebar.subheader("Upload Dataset")
 dataset = st.sidebar.file_uploader('Upload your dataset here')
-
 if dataset is not None:
     datatbl = pd.read_csv(dataset)
     st.sidebar.write("Uploaded dataset:")
     st.sidebar.dataframe(datatbl.head())
-
+if st.sidebar.button("Graph drawing tool"):
+            subprocess.call('python tinker.py')
+#----------------------------------------------------------------------------------------------------
+#Floating side menu
 htmlp2 = '''
             <style>
         .floating-menu {
@@ -76,7 +97,7 @@ htmlp2 = '''
         }
 
         .floating-menu a,
-        .floating-menu h3 {
+        .floating-menu h3 {\
             font-size: 0.9em;
             display: block;
             margin: 0 0.5em;
@@ -84,7 +105,7 @@ htmlp2 = '''
         }
         </style>
         <nav class="floating-menu">
-            <h3>Data Tweaking Labs🧊</h3>
+            <h3>GENETHOS🛠️</h3>
             <a href="https://github.com/synthdatagen" target="_blank">Github</a>
             <a href="https://docs.google.com/presentation/d/1H2cDNjSosFWmXeIfXjcs_qUbVFiEZqbJBaqiaUtnAws/edit?usp=sharing" target="_blank">Presentation</a>
             <a href="" target="_blank">Paper</a>
@@ -92,16 +113,15 @@ htmlp2 = '''
         </nav>
     '''
 st.markdown(htmlp2, unsafe_allow_html=True)
-
+#----------------------------------------------------------------------------------------------------
 # Navigation of the App
 if page == 'Home':
     page_home()
 
-
-if page == 'Bias Detection and Mitigation':
+elif page == 'Bias Detection and Mitigation':
     # st.subheader("Coming Soon ⚙")
     # BIAS DETECTION
-    st.title("♻Bias Detection & Mitigation")
+    st.title("🧬Bias Detection & Mitigation")
     st.markdown("""
     <h5 style="font-style: italic;">This tool gives insights into the bias that the dataset has and provides methods to mitigate it.</h5>""", unsafe_allow_html=True)
     
@@ -111,28 +131,65 @@ if page == 'Bias Detection and Mitigation':
     if dataset is not None:
 
         st.write(datatbl)
-        # datatbl = datatbl.dropna(how='any', axis=0)
-        # datatbl.info()
+   
+        st.write("_________")
+    
+        st.markdown("<h4>Bias Detection:</h4>",
+                    unsafe_allow_html=True)
+        # Step 1: Load Test Train Split
+        st.write("Choose bias detection algorithm:")
+        biasdetectalgo=st.selectbox("", ["Mean Difference","Disparate Impact","Statistical Parity Difference"])
+        
+        st.write("Choose bias mitigation algorithm:")
+        biasmitialgo=st.selectbox("", ["Reweighing","Disparate Impact Remover","Prejudice Remover"],index=1)
+        
+        st.write("Choose the column(s) you want to detect bias in (Protected Attribute):")
+        colstodetectbias=st.multiselect("", datatbl.columns)
+        
+        # for i in colstodetectbias:
+        #     st.write("enter privileged range for "+f"{i}")
+        #     st.text_input(label="lower bound",value=0,key=f"{i}"+"l")
+        #     st.text_input(label="upper bound",value=1,key=f"{i}"+"u")
+        
+        if st.button("Detect & mitigate Bias"):
+        
+            # Step 1 Load dataset, specifying protected attribute, and split dataset into train and test
+            dataset_orig = GermanDataset(
+            protected_attribute_names=['age'],           # this dataset also contains protected
+                                                        # attribute for "sex" which we do not
+                                                        # consider in this evaluation
+            privileged_classes=[lambda x: x >= 25],      # age >=25 is considered privileged
+            features_to_drop=['personal_status', 'sex'] # ignore sex-related attributes
+            )
 
-        # datatbl = datatbl.dropna(how='any', axis=0)
-        # datatbl.info()
+            #Step 4 Mitigate bias by transforming the original dataset
+            dataset_orig_train, dataset_orig_test = dataset_orig.split([0.7], shuffle=True)
+            privileged_groups = [{'age': 1}]
+            unprivileged_groups = [{'age': 0}]
+            
+            metric_orig_train = BinaryLabelDatasetMetric(dataset_orig_train, 
+                                             unprivileged_groups=unprivileged_groups,
+                                             privileged_groups=privileged_groups)
+            RW = Reweighing(unprivileged_groups=unprivileged_groups,
+                privileged_groups=privileged_groups)
+            dataset_transf_train = RW.fit_transform(dataset_orig_train)
 
-        # # Drop unnecessary column
-        # datatbl = datatbl.drop(['Loan_ID'], axis=1)
+            metric_transf_train = BinaryLabelDatasetMetric(dataset_transf_train, 
+                                               unprivileged_groups=unprivileged_groups,
+                                               privileged_groups=privileged_groups)
+
+            display(Markdown("#### Original training dataset"))
+            st.write("Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_orig_train.mean_difference())
+            st.write("_________")
+            display(Markdown("#### Bias mitigated dataset"))
+            st.write("Difference in mean outcomes between unprivileged and privileged groups = %f" % metric_transf_train.mean_difference())
+            st.write("_________")
+
     else:
         st.error("no dataset yet")
-    st.write("_________")
-    
-    st.markdown("<h4>Bias Detection:</h4>",
-                unsafe_allow_html=True)
-    st.write("Choose the columns you want to detect bias in:")
-    colstodetectbias=st.multiselect("", datatbl.columns)
-    st.button("Detect Bias")
-    st.write("_________")
-# NEW DATA
+
 elif page == 'New Data':
 
-  
     st.title("💹New Data")
     st.markdown("""
     <h5 style="font-style: italic;">Generate new data based on your specifications.</h5>""", unsafe_allow_html=True)
@@ -168,32 +225,32 @@ elif page == 'New Data':
             colnames[i] = st.text_input(
                 label="Column name", key="coln"+f"{i}")
             coltypes[i] = st.selectbox("Column type:",
-                                       ("Numerical(Float)", "Categorical(eg: Names, Countries)"), key="colt"+f"{i}")
-            if coltypes[i] == "Numerical(Float)":
+                                       ("Numerical", "Categorical(eg: Names, Countries)"), key="colt"+f"{i}")
+            if coltypes[i] == "Numerical":
                 coltypeflag=0
                 colsubtypes[i] = st.selectbox("Describe the column:", (
-                    'Number', 'Distribution', 'Python Expression'), key="colst"+f"{i}")
+                    'Number', 'Distribution', 'Python Expression','List','Sew'), key="colst"+f"{i}")
             elif coltypes[i] == "Categorical(eg: Names, Countries)":
                 coltypeflag=1
                 colsubtypes[i] = st.selectbox("Describe the column: "+f"{i}"+" ("+f"{colnames[i]}"+")", (
-                    'Blank', 'String', 'Distribution', 'Names', 'Countries', 'Python Expression'), key="colst"+f"{i}")
-            stpcol1,stpcol2=st.columns(2)
-            with stpcol1:
-                if st.button("Add step",key=f"{i}"):
-                    generationsteps[i]+=1
+                    'Blank', 'String', 'Distribution', 'Names', 'Countries', 'Python Expression','List'), key="colst"+f"{i}")
+            # stpcol1,stpcol2=st.columns(2)
+            # with stpcol1:
+            #     if st.button("Add step",key=f"{i}"):
+            #         generationsteps[i]+=1
 
-            if generationsteps[i]>1:    
-                with stpcol2:
-                    if st.button("Remove step"):
-                        generationsteps[i]-=1
+            # if generationsteps[i]>1:    
+            #     with stpcol2:
+            #         if st.button("Remove step"):
+            #             generationsteps[i]-=1
 
-            for j in range(generationsteps[i]):
-                # if coltypeflag==0:
-                #     pass
-                # elif coltypeflag==1:
-                #     pass
-                st.write("step"+f"{j+1}",key="genstps"+f"{j}")
-                tblcols[i] = colip(colsubtypes[i], nrows, i,j, tblcols)
+            # for j in range(generationsteps[i]):
+            #     # if coltypeflag==0:
+            #     #     pass
+            #     # elif coltypeflag==1:
+            #     #     pass
+            #     st.write("step"+f"{j+1}",key="genstps"+f"{j}")
+            tblcols[i] = colip(colsubtypes[i], nrows, i, tblcols, colnames)
 
     st.write("____________")
     st.markdown("<h4>Columns added:</h4>",
@@ -216,8 +273,6 @@ elif page == 'New Data':
         df2.to_csv("generateddata.csv")
         st.write("Dataset downloaded ✔")
         st.caption("check your project folder")
-
-# SYNTHETIC DATA GENERATION METHODS ------------------------------------------------------------------------------
 
 elif page == 'More Data':
 
@@ -258,7 +313,7 @@ elif page == 'More Data':
         nrecords = int(st.number_input(label="Number of records to generate", value=1000))
 
 
-        yaml = ruamel_yaml.YAML()
+        yaml = ruamel.yaml.YAML()
         yaml.preserve_quotes = True
         with open('input.yaml') as fp:
             data = yaml.load(fp)
@@ -312,7 +367,50 @@ elif page == 'More Data':
                 Currently, this library implements the CTGAN and TVAE models proposed in
                 the Modeling Tabular data using Conditional GAN paper.""")
 
-        st.button("Generate")
+        real_data = load_demo()
+        file_path = "./TGAN_credit_risk.csv"
+        df = pd.read_csv(file_path)
+        df=df.dropna()
+
+      
+
+        # Identifies all the discrete columns
+
+        discrete_columns = [
+            'Unnamed: 0',
+            'Existing-Account-Status',
+            'Credit-History',
+            'Purpose',
+            'Saving-Acount',
+            'Present-Employment',
+            'Installment rate',
+            'Sex',
+            'Guarantors',
+            'Residence',
+            'Property',
+            'Installment',
+            'Housing',
+            'Existing credits',
+            'Job',
+            'Num people', 
+            'Telephone',
+            'foreign worker',
+            'Status'
+        ]
+
+        # Initiates the CTGANSynthesizer and call its fit method to pass in the table
+        
+        ctgan = CTGANSynthesizer(epochs=10)
+        ctgan.fit(df, discrete_columns)
+
+        #generate synthetic data, 1000 rows of data
+
+        st.write('Synthetic Data Generated')
+        synthetic_data = ctgan.sample(1000)
+        print(synthetic_data.head(5))
+
+        synthetic_data
+
 
     if modelchoice == 'TGAN':
         with st.expander("About TGAN"):
@@ -322,7 +420,7 @@ elif page == 'More Data':
             st.write("""TGAN is a tabular data synthesizer.
                 It can generate fully synthetic data from real data.
                 Currently, TGAN can generate numerical columns and categorical columns.""")
-
+    
 elif page == 'Test':
 
     def plot_and_move(df):
@@ -360,16 +458,16 @@ elif page == 'Test':
 
     st.write(plot_and_move(df))
 
-
-    # Hide Hamborgor and "Made with StreamLit"
+#-----------------------------------------------------------------------------------------------------
+#Misc code to hide unnecessary elements
 hide_streamlit_style = """
             <style>
             # MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             </style>
             """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 hide_decoration_bar_style = '''
     <style>
@@ -377,19 +475,15 @@ hide_decoration_bar_style = '''
     </style>
 '''
 st.markdown(hide_decoration_bar_style, unsafe_allow_html=True)
-
 # -------------------------------------------------------------------------------------
-
+#Interactive drawing tool test code
 # output_file("tools_point_draw.html")
-
 # p = figure(x_range=(0, 10), y_range=(0, 10), tools=[],
 #            title='Point Draw Tool')
 # p.background_fill_color = 'lightgrey'
-
 # source = ColumnDataSource({
 #     'x': [1, 5, 9], 'y': [1, 5, 9], 'color': ['red', 'green', 'yellow']
 # })
-
 # renderer = p.scatter(x='x', y='y', source=source, color='color', size=10)
 # columns = [TableColumn(field="x", title="x"),
 #            TableColumn(field="y", title="y"),
@@ -399,8 +493,6 @@ st.markdown(hide_decoration_bar_style, unsafe_allow_html=True)
 # draw_tool = PointDrawTool(renderers=[renderer], empty_value='black')
 # p.add_tools(draw_tool)
 # p.toolbar.active_tap = draw_tool
-
 # print(str())
-
-
 # show(Column(p, table))
+#----------------------------------------------------------------------------------------

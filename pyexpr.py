@@ -1,0 +1,1 @@
+op[i]=getcolval("num")[i]

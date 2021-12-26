@@ -2,13 +2,18 @@ import streamlit as st
 from faker import Faker
 from streamlit_ace import st_ace
 import random
+import subprocess
+from scipy.stats import norm
 
-fake = Faker()
-
-def colip(coltype, nrows, i, j, tblcols):
+def colip(coltype, nrows, i, tblcols,colnames):
     # for cc in colnames:
     #     pass
     #     # eval()
+
+
+    j=0
+    fake = Faker()
+    element=None
     if coltype == "Number":
         x = int(st.text_input(label="enter an integer", value=0, key="int"+str(i)+str(j)))
         return [x]*nrows
@@ -18,7 +23,7 @@ def colip(coltype, nrows, i, j, tblcols):
                            value="foo", key="str"+str(i)+str(j))
         return [x2]*nrows
 
-    if coltype == "sequence":
+    if coltype == "Sequence":
         start = int(st.text_input(
             label="enter start value", value=0, key="sta"+str(i)+str(j)))
         increment = int(st.text_input(
@@ -55,7 +60,7 @@ def colip(coltype, nrows, i, j, tblcols):
             op[i] = fake.country()
         return op
 
-    if coltype == "list":
+    if coltype == "List":
         lst = st.text_input(
             label="enter a list of things, comma seperated", value="foo, bar, baz", key="lab"+str(i)+str(j))
         howlst = st.selectbox(
@@ -73,22 +78,39 @@ def colip(coltype, nrows, i, j, tblcols):
 
         return lop
 
-    if coltype == "distribution":
-        st.write("Coming soon ⚙")
-        return 0
+    if coltype == "Distribution":
+        disttype=st.selectbox("Distribution Type",("Normal Distribution","Exponential Distribution","Visual Distribution"))
+        if disttype=="Visual Distribution":
+            subprocess.call('python tinker.py')
+            return [None]*nrows
+        if disttype=="Normal Distribution":
+            mean=int(st.text_input(label="enter mean of distribution", value=0, key="ndm"+str(i)+str(j)))
+            scale=int(st.text_input(label="enter scale/std.dev of distribution", value=0, key="nds"+str(i)+str(j)))
+            return norm.rvs(size=nrows,loc=mean,scale=scale)
 
-    if coltype == "Python Expression":
+    if coltype == "Python Exprssion":
+        def getcol(colname):
+            return tblcols[colnames.index(colname)]
+        
         op=[None]*nrows
+        st.caption("write a python code or expression to describe the individual element of the column. the code needs to modify the value of op[i] , which is a value of a single element of the column, and i is the row number.")
+        st.caption("the function getcol('colname') allows you to access values of other columns to create relationships, eg:")
+        st.code("""
+            if (getcol('Gender')[i]=='Male'):
+                op[i]=fake.first_name_male
+            else:
+                op[i]=fake.first_name_female   """ )
         content = st_ace(language="python", theme="twilight", auto_update=True,
                          wrap=True, min_lines=1, max_lines=2, key="code"+str(i)+str(j))
-        if content != "":
-            
-            for i in op:
-                i=eval(content)
+        if st.button("save"):
+            with open('pyexpr.py', "w") as myfile:
+                myfile.write(content)
+            myfile.close()
+            for i in range(nrows):
+                exec(open("pyexpr.py").read(),locals())
             return op
 
-def nameresolver():
-    return 0
+
 
 def page_home():
     htmlp1 = '''
