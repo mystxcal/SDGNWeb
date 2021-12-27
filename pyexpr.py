@@ -1,1 +1,1 @@
-op[i]=getcolval("num")[i]
+op[i]=random.randint(1000,5000)

@@ -57,6 +57,9 @@ from ctgan import CTGANSynthesizer
 from ctgan import load_demo
 from table_evaluator import load_data, TableEvaluator
 
+#TGAN
+# import tgan
+# from tgan.model import TGANModel
 
 #------------------------------------------------------------------------------------------------
 #Global variables
@@ -108,7 +111,7 @@ htmlp2 = '''
             <h3>GENETHOS🛠️</h3>
             <a href="https://github.com/synthdatagen" target="_blank">Github</a>
             <a href="https://docs.google.com/presentation/d/1H2cDNjSosFWmXeIfXjcs_qUbVFiEZqbJBaqiaUtnAws/edit?usp=sharing" target="_blank">Presentation</a>
-            <a href="" target="_blank">Paper</a>
+            <a href="https://drive.google.com/file/d/1n5dtp2eidtJd4oDUOxxO_YiWuTzWSAq0/view?usp=sharing" target="_blank">Paper</a>
 
         </nav>
     '''
@@ -229,11 +232,11 @@ elif page == 'New Data':
             if coltypes[i] == "Numerical":
                 coltypeflag=0
                 colsubtypes[i] = st.selectbox("Describe the column:", (
-                    'Number', 'Distribution', 'Python Expression','List','Sew'), key="colst"+f"{i}")
+                    'Number', 'Distribution', 'Python Expression','List','Sequence','Bool'), key="colst"+f"{i}")
             elif coltypes[i] == "Categorical(eg: Names, Countries)":
                 coltypeflag=1
                 colsubtypes[i] = st.selectbox("Describe the column: "+f"{i}"+" ("+f"{colnames[i]}"+")", (
-                    'Blank', 'String', 'Distribution', 'Names', 'Countries', 'Python Expression','List'), key="colst"+f"{i}")
+                    'Blank', 'String', 'Names', 'Countries','Email','URL','Color','Job','ISBN','Credit Card', 'Python Expression','List','Bool'), key="colst"+f"{i}")
             # stpcol1,stpcol2=st.columns(2)
             # with stpcol1:
             #     if st.button("Add step",key=f"{i}"):
@@ -349,10 +352,13 @@ elif page == 'More Data':
         # plt.scatter(sc1, sc2, c=['#1f77b4', '#ff7f0e'])
         # plt.pyplot.show()
 
-        if os.path.exists("D:\Development\Codies\Programming\Python\StreamLit\synthetic_data.csv") == True:
+        if os.path.exists("synthetic_data.csv") == True:
             if st.button("Generate Plots"):
-                pass
-
+                st.write("Graphs")
+                with st.expander("Show"):
+                    st.image("1.png")
+                    st.image("2.png")
+                
 
     # CTGAN --------------------------------------------------------------------------------------------------------------
     if modelchoice == 'CTGAN':
@@ -366,50 +372,50 @@ elif page == 'More Data':
                 which are able to learn from real data and generate synthetic clones with high fidelity.
                 Currently, this library implements the CTGAN and TVAE models proposed in
                 the Modeling Tabular data using Conditional GAN paper.""")
+        if st.button('Generate'):
+            real_data = load_demo()
+            file_path = "./TGAN_credit_risk.csv"
+            df = pd.read_csv(file_path)
+            df=df.dropna()
 
-        real_data = load_demo()
-        file_path = "./TGAN_credit_risk.csv"
-        df = pd.read_csv(file_path)
-        df=df.dropna()
-
-      
-
-        # Identifies all the discrete columns
-
-        discrete_columns = [
-            'Unnamed: 0',
-            'Existing-Account-Status',
-            'Credit-History',
-            'Purpose',
-            'Saving-Acount',
-            'Present-Employment',
-            'Installment rate',
-            'Sex',
-            'Guarantors',
-            'Residence',
-            'Property',
-            'Installment',
-            'Housing',
-            'Existing credits',
-            'Job',
-            'Num people', 
-            'Telephone',
-            'foreign worker',
-            'Status'
-        ]
-
-        # Initiates the CTGANSynthesizer and call its fit method to pass in the table
         
-        ctgan = CTGANSynthesizer(epochs=10)
-        ctgan.fit(df, discrete_columns)
 
-        #generate synthetic data, 1000 rows of data
+            # Identifies all the discrete columns
 
-        st.write('Synthetic Data Generated')
-        synthetic_data = ctgan.sample(1000)
-        print(synthetic_data.head(5))
+            discrete_columns = [
+                'Unnamed: 0',
+                'Existing-Account-Status',
+                'Credit-History',
+                'Purpose',
+                'Saving-Acount',
+                'Present-Employment',
+                'Installment rate',
+                'Sex',
+                'Guarantors',
+                'Residence',
+                'Property',
+                'Installment',
+                'Housing',
+                'Existing credits',
+                'Job',
+                'Num people', 
+                'Telephone',
+                'foreign worker',
+                'Status'
+            ]
 
-        synthetic_data
+            # Initiates the CTGANSynthesizer and call its fit method to pass in the table
+            
+            ctgan = CTGANSynthesizer(epochs=10)
+            ctgan.fit(df, discrete_columns)
+
+            #generate synthetic data, 1000 rows of data
+
+            st.write('Synthetic Data Generated')
+            synthetic_data = ctgan.sample(1000)
+            print(synthetic_data.head(5))
+
+            synthetic_data
 
 
     if modelchoice == 'TGAN':
@@ -420,7 +426,46 @@ elif page == 'More Data':
             st.write("""TGAN is a tabular data synthesizer.
                 It can generate fully synthetic data from real data.
                 Currently, TGAN can generate numerical columns and categorical columns.""")
-    
+
+        if st.button('Generate'):
+            continuous_columns = [2, 5, 13]
+            file_path = "./TGAN_credit_risk.csv"
+            t_df = pd.read_csv(file_path)
+            # tdf.columns
+            # tdf=tdf.fillna(0)
+
+            # continuous_columns = [2, 5, 13]
+            t_df
+
+            # tgan = TGANModel(
+            #     continuous_columns,
+            #     output='output',
+            #     gpu=None,
+            #     max_epoch=5,
+            #     steps_per_epoch=10000,
+            #     save_checkpoints=True,
+            #     restore_session=True,
+            #     batch_size=200,
+            #     z_dim=200,
+            #     noise=0.2,
+            #     l2norm=0.00001,
+            #     learning_rate=0.001,
+            #     num_gen_rnn=100,
+            #     num_gen_feature=100,
+            #     num_dis_layers=1,
+            #     num_dis_hidden=100,
+            #     optimizer='AdamOptimizer'
+            # )
+
+            # tgan.fit(tdf)
+            # num_samples = 1000
+
+            # samples = tgan.sample(num_samples)
+
+            # samples.head(3)
+            st.button(label="Save")
+          
+
 elif page == 'Test':
 
     def plot_and_move(df):

@@ -3,7 +3,8 @@ from faker import Faker
 from streamlit_ace import st_ace
 import random
 import subprocess
-from scipy.stats import norm
+from scipy.stats import norm,expon
+#from tink3 import *
 
 def colip(coltype, nrows, i, tblcols,colnames):
     # for cc in colnames:
@@ -60,6 +61,68 @@ def colip(coltype, nrows, i, tblcols,colnames):
             op[i] = fake.country()
         return op
 
+    
+    if coltype == "URL":
+        op = [None]*nrows
+        for i in range(nrows):
+            op[i] = fake.url()
+        return op
+
+    if coltype == "Bool":
+        op = [None]*nrows
+        ptrue=int(st.text_input(label="Probaility of getting True", value=50, key="ptrue"+str(i)+str(j)))
+        for i in range(nrows):
+            op[i] = fake.boolean(chance_of_getting_true=ptrue)
+        return op
+
+    if coltype == "Job":
+        op = [None]*nrows
+        for i in range(nrows):
+            op[i] = fake.job()
+        return op
+
+    if coltype == "ISBN":
+        op = [None]*nrows
+        
+        isbntype=st.selectbox(label="ISBN type",options=("10","13"),key="cctype"+str(i)+str(j))
+        
+        if isbntype=="10":
+            for i in range(nrows):
+                op[i] = fake.isbn10()
+        if isbntype=="13":
+            for i in range(nrows):
+                op[i] = fake.isbn13()
+        return op
+
+    if coltype == "Color":
+        op = [None]*nrows
+        for i in range(nrows):
+            op[i] = fake.color_name()
+        return op
+    
+    if coltype == "Email":
+        op = [None]*nrows
+        for i in range(nrows):
+            op[i] = fake.email()
+        return op
+
+    if coltype == "Credit Card":
+        cctype=st.selectbox(label="value type",options=("Expiry","CVC","Full"), key="cctype"+str(i)+str(j))
+        op = [None]*nrows
+        if cctype == "Expiry":
+            for i in range(nrows):
+                op[i]=fake.credit_card_expire()
+        if cctype == "CVC":
+            for i in range(nrows):
+                op[i]=fake.credit_card_security_code()
+        if cctype == "Provider":
+            for i in range(nrows):
+                op[i]=fake.credit_card_provider()
+        if cctype == "Full":
+            for i in range(nrows):
+                op[i]=fake.credit_card_full()
+        return op
+
     if coltype == "List":
         lst = st.text_input(
             label="enter a list of things, comma seperated", value="foo, bar, baz", key="lab"+str(i)+str(j))
@@ -81,14 +144,26 @@ def colip(coltype, nrows, i, tblcols,colnames):
     if coltype == "Distribution":
         disttype=st.selectbox("Distribution Type",("Normal Distribution","Exponential Distribution","Visual Distribution"))
         if disttype=="Visual Distribution":
-            subprocess.call('python tinker.py')
+            xmin = st.text_input("Enter lowest x value", value=0, key="xmn"+str(i)+str(j))
+            xmax = st.text_input("Enter highest x value", value=1, key="xmx"+str(i)+str(j))
+            ymin = st.text_input("Enter lowest y value", value=0, key="ymn"+str(i)+str(j))
+            ymax = st.text_input("Enter highest y value", value=1, key="ymx"+str(i)+str(j))
+            if st.button("Graph drawing Tool"):
+                subprocess.run(["python", "tink3.py",xmin,xmax,ymin,ymax])
+
             return [None]*nrows
+        
         if disttype=="Normal Distribution":
             mean=int(st.text_input(label="enter mean of distribution", value=0, key="ndm"+str(i)+str(j)))
             scale=int(st.text_input(label="enter scale/std.dev of distribution", value=0, key="nds"+str(i)+str(j)))
             return norm.rvs(size=nrows,loc=mean,scale=scale)
 
-    if coltype == "Python Exprssion":
+        if disttype=="Exponential Distribution":
+            mean=int(st.text_input(label="enter mean of distribution", value=0, key="xdm"+str(i)+str(j)))
+            scale=int(st.text_input(label="enter scale/std.dev of distribution", value=0, key="xds"+str(i)+str(j)))
+            return expon.rvs(size=nrows,loc=mean,scale=scale)
+
+    if coltype == "Python Expression":
         def getcol(colname):
             return tblcols[colnames.index(colname)]
         
@@ -103,11 +178,11 @@ def colip(coltype, nrows, i, tblcols,colnames):
         content = st_ace(language="python", theme="twilight", auto_update=True,
                          wrap=True, min_lines=1, max_lines=2, key="code"+str(i)+str(j))
         if st.button("save"):
-            with open('pyexpr.py', "w") as myfile:
+            with open('pyexpr'+f'{i}'+'.py', "w") as myfile:
                 myfile.write(content)
             myfile.close()
             for i in range(nrows):
-                exec(open("pyexpr.py").read(),locals())
+                exec(open('pyexpr'+f'{i}'+'.py').read(),globals(),locals())
             return op
 
 
