@@ -14,3 +14,4 @@ gretel_client
 bokeh
 ctgan
 ruamel.yaml
+table-evaluator
