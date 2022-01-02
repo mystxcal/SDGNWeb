@@ -19,7 +19,7 @@ from PIL import Image
 #Streamlit
 import streamlit as st
 from streamlit_drawable_canvas import st_canvas
-# from streamlit_bokeh_events import streamlit_bokeh_events
+from streamlit_bokeh_events import streamlit_bokeh_events
 from streamlit_ace import st_ace
 #Sklearn
 from sklearn.linear_model import LogisticRegression
