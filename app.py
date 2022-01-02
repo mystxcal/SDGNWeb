@@ -19,7 +19,7 @@ from PIL import Image
 #Streamlit
 import streamlit as st
 from streamlit_drawable_canvas import st_canvas
-from streamlit_bokeh_events import streamlit_bokeh_events
+# from streamlit_bokeh_events import streamlit_bokeh_events
 from streamlit_ace import st_ace
 #Sklearn
 from sklearn.linear_model import LogisticRegression
@@ -276,6 +276,7 @@ elif page == 'New Data':
         df2.to_csv("generateddata.csv")
         st.write("Dataset downloaded ✔")
         st.caption("check your project folder")
+    
 
 elif page == 'More Data':
 
