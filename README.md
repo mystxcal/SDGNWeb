@@ -1,6 +1,4 @@
 # GenEthos
-### A Synthetic data generation tool with Bias detection and mitigation
-______________________
 #### Synthetic Data generation and Bias Detection/Mitigation tools for Fair and Ethical data
 ______________________
 #### Streamlit Live App: https://share.streamlit.io/dewenhona/sdgnweb/app.py
