@@ -7,9 +7,8 @@ ______________________
 #### Prototype/Mockup: https://framer.com/share/SDN--p3lrp947qJ0YVqD7z9YF/YCDqQJRgE#YCDqQJRgE
 ______________________
 ### Steps to run:
-______________________
 #### 1) clone repo
 #### 2) pip install requirements.txt
 #### 3) streamlit run app.py
-
+______________________
 
